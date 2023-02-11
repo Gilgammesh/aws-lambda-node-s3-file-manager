@@ -1,0 +1,46 @@
+service: serverless-lambda-s3-file-manager
+
+frameworkVersion: "3"
+
+provider:
+  name: aws
+  runtime: nodejs16.x
+  region: us-east-1
+  environment:
+    S3_BUCKET: repository-files-manager
+
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - "s3:PutObject"
+        - "s3:GetObject"
+        - "s3:DeleteObject"
+      Resource:
+        - "arn:aws:s3:::${self:provider.environment.S3_BUCKET}/*"
+
+plugins:
+  - serverless-plugin-typescript
+  - serverless-prune-plugin
+  - serverless-offline
+
+custom:
+  prune:
+    automatic: true
+    number: 1
+
+functions:
+  fileManager:
+    handler: lambda.handler
+    events:
+      - http:
+          method: any
+          path: file-manager
+          cors: true
+
+resources:
+  Resources:
+    S3Bucket:
+      Type: "AWS::S3::Bucket"
+      Properties:
+        BucketName: "${self:provider.environment.S3_BUCKET}"
+        AccessControl: PublicRead
